@@ -16,7 +16,7 @@ var led6 = 1
 app.get('/', (req, res) => {
     var phase = suncalc.getMoonIllumination(moment()).phase
     var led = 0
-    if (phase >= led1 && phase < led2) {
+    if (phase >= 0 && phase < led2) {
         led = 1
     }
     if (phase > led2 && phase <= led3) {
