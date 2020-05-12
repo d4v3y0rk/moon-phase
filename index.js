@@ -13,7 +13,7 @@ var led4 = 1/6*4
 var led5 = 1/6*5
 var led6 = 1
 
-app.get('/', (req, res) => {
+app.get('/moon', (req, res) => {
     var phase = suncalc.getMoonIllumination(moment()).phase
     var led = 0
     // if any of the moon is lit up we light up one led
@@ -38,11 +38,11 @@ app.get('/', (req, res) => {
     }
     res.send(`${led}`)
 })
-app.get('/phase', (req, res) => {
+app.get('/moon/phase', (req, res) => {
     var phase = suncalc.getMoonIllumination(moment()).phase
     res.send(`${phase}`)
 })
-app.get('/up', (req, res) => {
+app.get('/moon/up', (req, res) => {
     var date = moment()
     var up = moment(suncalc.getMoonTimes(date, '40.440624', '-79.995888').rise).isBefore(moment())
     res.send(`${up}`)
