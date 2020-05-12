@@ -16,6 +16,8 @@ var led6 = 1
 app.get('/', (req, res) => {
     var phase = suncalc.getMoonIllumination(moment()).phase
     var led = 0
+    // if any of the moon is lit up we light up one led
+    // one led stays lit until we get to 2
     if (phase > 0 && phase < led2) {
         led = 1
     }
@@ -45,4 +47,4 @@ app.get('/up', (req, res) => {
     var up = moment(suncalc.getMoonTimes(date, '40.440624', '-79.995888').rise).isBefore(moment())
     res.send(`${up}`)
 })
-app.listen(port, () => console.log(`Example app listening...`))
+app.listen(port, () => console.log(`Moon Phase app listening...`))

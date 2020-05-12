@@ -1,0 +1,10 @@
+app:
+  build: ./
+  volumes:
+    - ./:/var/www/app
+  ports:
+    - 3001:3001
+  environment:
+    - PORT=3001
+  command:
+    sh -c 'npm i && node index.js'
