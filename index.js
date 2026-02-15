@@ -9,21 +9,10 @@ const PITTSBURGH_LON = -79.995888
 
 app.use(helmet())
 
-// my moon light only has 6 leds so I need to figure out how many
-// to light up despite there being 8 moon phases instead of 6
-function getLedCount(phase) {
-  const led2 = 1/6*2
-  const led3 = 1/6*3
-  const led4 = 1/6*4
-  const led5 = 1/6*5
-
-  if (phase <= 0) return 0
-  if (phase < led2) return 1
-  if (phase < led3) return 2
-  if (phase < led4) return 3
-  if (phase < led5) return 4
-  if (phase < 1) return 5
-  return 6
+// Map illumination fraction (0.0-1.0) to 6 LEDs
+function getLedCount(fraction) {
+  if (fraction <= 0) return 0
+  return Math.min(Math.ceil(fraction * 6), 6)
 }
 
 app.get('/health', (req, res) => {
@@ -31,8 +20,8 @@ app.get('/health', (req, res) => {
 })
 
 app.get('/moon', (req, res) => {
-  const { phase } = suncalc.getMoonIllumination(new Date())
-  res.send(`${getLedCount(phase)}`)
+  const { fraction } = suncalc.getMoonIllumination(new Date())
+  res.send(`${getLedCount(fraction)}`)
 })
 
 app.get('/moon/phase', (req, res) => {
@@ -42,8 +31,19 @@ app.get('/moon/phase', (req, res) => {
 
 app.get('/moon/up', (req, res) => {
   const now = new Date()
-  const { rise } = suncalc.getMoonTimes(now, PITTSBURGH_LAT, PITTSBURGH_LON)
-  const up = rise ? rise < now : false
+  const times = suncalc.getMoonTimes(now, PITTSBURGH_LAT, PITTSBURGH_LON)
+  let up = false
+  if (times.alwaysUp) {
+    up = true
+  } else if (times.alwaysDown) {
+    up = false
+  } else if (times.rise && times.set) {
+    up = times.rise < times.set ? (now >= times.rise && now < times.set) : (now >= times.rise || now < times.set)
+  } else if (times.rise) {
+    up = now >= times.rise
+  } else if (times.set) {
+    up = now < times.set
+  }
   res.send(`${up}`)
 })
 

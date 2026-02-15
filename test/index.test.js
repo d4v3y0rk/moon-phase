@@ -1,25 +1,25 @@
-import { describe, it, expect, afterAll } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import request from 'supertest'
 import { app, getLedCount } from '../index.js'
 
 describe('getLedCount', () => {
-  it('returns 0 for new moon (phase 0)', () => {
+  it('returns 0 for no illumination', () => {
     expect(getLedCount(0)).toBe(0)
   })
 
-  it('returns 1 for early waxing', () => {
+  it('returns 1 for low illumination', () => {
     expect(getLedCount(0.1)).toBe(1)
   })
 
-  it('returns 3 for half moon', () => {
+  it('returns 3 for half illumination (first/last quarter)', () => {
     expect(getLedCount(0.5)).toBe(3)
   })
 
-  it('returns 5 for nearly full', () => {
-    expect(getLedCount(0.9)).toBe(5)
+  it('returns 6 for high illumination (>83%)', () => {
+    expect(getLedCount(0.9)).toBe(6)
   })
 
-  it('returns 6 for full moon (phase 1.0)', () => {
+  it('returns 6 for full illumination (full moon)', () => {
     expect(getLedCount(1.0)).toBe(6)
   })
 
@@ -27,14 +27,16 @@ describe('getLedCount', () => {
     expect(getLedCount(-0.1)).toBe(0)
   })
 
-  it('maps all 6 LED ranges correctly', () => {
-    expect(getLedCount(0)).toBe(0)
-    expect(getLedCount(1/6)).toBe(1)
-    expect(getLedCount(2/6)).toBe(2)
-    expect(getLedCount(3/6)).toBe(3)
-    expect(getLedCount(4/6)).toBe(4)
-    expect(getLedCount(5/6)).toBe(5)
-    expect(getLedCount(1)).toBe(6)
+  it('maps illumination to LEDs: ceil(fraction * 6)', () => {
+    expect(getLedCount(0)).toBe(0)     // new moon
+    expect(getLedCount(0.01)).toBe(1)  // sliver
+    expect(getLedCount(1/6)).toBe(1)   // exactly 1/6
+    expect(getLedCount(0.25)).toBe(2)  // quarter
+    expect(getLedCount(0.5)).toBe(3)   // half
+    expect(getLedCount(0.75)).toBe(5)  // three quarters
+    expect(getLedCount(5/6)).toBe(5)   // exactly 5/6
+    expect(getLedCount(0.84)).toBe(6)  // just over 5/6
+    expect(getLedCount(1.0)).toBe(6)   // full moon
   })
 })
 
