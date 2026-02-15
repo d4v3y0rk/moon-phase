@@ -1,10 +1,12 @@
-app:
-  build: ./
-  volumes:
-    - ./:/var/www/app
-  ports:
-    - 3001:3001
-  environment:
-    - PORT=3001
-  command:
-    sh -c 'npm i && node index.js'
+services:
+  app:
+    build: ./
+    container_name: moon_phase
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - TZ=America/New_York
+    restart: always
+    labels:
+      - "logging=promtail"

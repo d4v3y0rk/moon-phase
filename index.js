@@ -1,50 +1,59 @@
 const suncalc = require('suncalc')
-const moment = require('moment')
 const express = require('express')
+const helmet = require('helmet')
+
 const app = express()
-const port = process.env.PORT
+const port = process.env.PORT || 3001
+const PITTSBURGH_LAT = 40.440624
+const PITTSBURGH_LON = -79.995888
+
+app.use(helmet())
 
 // my moon light only has 6 leds so I need to figure out how many
 // to light up despite there being 8 moon phases instead of 6
-var led1 = 1/6
-var led2 = 1/6*2
-var led3 = 1/6*3
-var led4 = 1/6*4
-var led5 = 1/6*5
-var led6 = 1
+function getLedCount(phase) {
+  const led2 = 1/6*2
+  const led3 = 1/6*3
+  const led4 = 1/6*4
+  const led5 = 1/6*5
+
+  if (phase <= 0) return 0
+  if (phase < led2) return 1
+  if (phase < led3) return 2
+  if (phase < led4) return 3
+  if (phase < led5) return 4
+  if (phase < 1) return 5
+  return 6
+}
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' })
+})
 
 app.get('/moon', (req, res) => {
-    var phase = suncalc.getMoonIllumination(moment()).phase
-    var led = 0
-    // if any of the moon is lit up we light up one led
-    // one led stays lit until we get to 2
-    if (phase > 0 && phase < led2) {
-        led = 1
-    }
-    if (phase >= led2 && phase < led3) {
-        led = 2
-    }
-    if (phase >= led3 && phase < led4) {
-        led = 3
-    }
-    if (phase >= led4 && phase < led5) {
-        led = 4
-    }
-    if (phase >= led5 && phase < led6) {
-        led = 5
-    }
-    if (phase == led6) {
-        led = 6
-    }
-    res.send(`${led}`)
+  const { phase } = suncalc.getMoonIllumination(new Date())
+  res.send(`${getLedCount(phase)}`)
 })
+
 app.get('/moon/phase', (req, res) => {
-    var phase = suncalc.getMoonIllumination(moment()).phase
-    res.send(`${phase}`)
+  const { phase } = suncalc.getMoonIllumination(new Date())
+  res.send(`${phase}`)
 })
+
 app.get('/moon/up', (req, res) => {
-    var date = moment()
-    var up = moment(suncalc.getMoonTimes(date, '40.440624', '-79.995888').rise).isBefore(moment())
-    res.send(`${up}`)
+  const now = new Date()
+  const { rise } = suncalc.getMoonTimes(now, PITTSBURGH_LAT, PITTSBURGH_LON)
+  const up = rise ? rise < now : false
+  res.send(`${up}`)
 })
-app.listen(port, () => console.log(`Moon Phase app listening...`))
+
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`Moon Phase API listening on port ${port}`)
+})
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully')
+  server.close(() => process.exit(0))
+})
+
+module.exports = { app, getLedCount }
